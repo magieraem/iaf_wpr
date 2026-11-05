@@ -8,10 +8,6 @@ from fooof import FOOOF
 
 #CONFIGURATION
 
-BEH_PATH = "/mnt/data/ociepka_idUJ/BEH/Raven_APM_EEG/results" # Path to the folder with behavioral data files.
-EEG_PATH = "/mnt/data/ociepka_idUJ/BDF/2_Raven" # Path to the folder with raw EEG data files.
-RESULT_PATH = "/mnt/data/ociepka_idUJ/PREPROCESSING/Raven/PREPROCESSED_1st" # Path to the folder where preprocessed data will be saved.
-
 DATA_DIR = "/mnt/data/ociepka_idUJ/PREPROCESSING"
 OUTPUT_DIR = "/home/magiera/IAF_WPR"
 PLOTS_DIR = OUTPUT_DIR / "plots"
