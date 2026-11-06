@@ -5,15 +5,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mne
 from fooof import FOOOF
+import matplotlib
+matplotlib.use("Agg")
 
 #CONFIGURATION
 
-DATA_DIR = "/mnt/data/ociepka_idUJ/PREPROCESSING"
-OUTPUT_DIR = "/home/magiera/IAF_WPR"
+DATA_DIR = Path("PREPROCESSING/WPR/WPR_preprocessed")
+OUTPUT_DIR = Path("IAF_results")
 PLOTS_DIR = OUTPUT_DIR / "plots"
+
+REGION_FOLDERS = {
+    "frontal_wider": "frontal",
+    "posterior_wider": "posterior",
+}
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 FREQ_MIN = 2.0
 FREQ_MAX = 40.0
@@ -150,6 +158,7 @@ def plot_roi_psd(freqs, psd, iaf, subject_id, region_name, output_path):
     plt.close(fig)
     
 #PROCESSING FILES
+plt.close("all")
 epoch_files = sorted(
     set(DATA_DIR.rglob("*-epo.fif"))
     | set(DATA_DIR.rglob("*_epo.fif"))
@@ -163,11 +172,10 @@ if not epoch_files:
 results = []
 
 for file_path in epoch_files:
-    region_name = file_path.parent.name.lower()
+    region_name = REGION_FOLDERS.get(file_path.parent.name.lower())
 
-    if region_name not in REGIONS:
+    if region_name is None:
         continue
-
     subject_id = get_subject_id(file_path)
 
     epochs = mne.read_epochs(
@@ -191,9 +199,11 @@ for file_path in epoch_files:
 
     fm.plot(plot_peaks="shade")            # log spectrum + model, easier to judge
     if np.isfinite(iaf):
-        plt.axvline(iaf, color="red", ls="--")
-        plt.title(f"{subject_id} - {region_name}")
-        plt.show()
+        plt.axvline(iaf, color="red", ls="--", label=f"IAF = {iaf:.2f} Hz")
+        plt.legend(frameon=False)
+    plt.title(f"{subject_id} - {region_name} | {res['status']}")
+    plt.savefig(PLOTS_DIR / f"{subject_id}_{region_name}_fooof.png", dpi=150)
+    plt.close("all")
 
     results.append({"subject_id": subject_id, "region": region_name,
                 "n_epochs": len(epochs), "n_channels": len(used_channels), **res})
@@ -221,6 +231,7 @@ if not results_df.duplicated(["subject_id", "region"]).any():
         index=False,
     )
 
+plt.close("all")
 print("\nAnalysis complete.")
 print(f"Results saved to: {OUTPUT_DIR.resolve()}")
 print(results_df[["subject_id", "region", "IAF", "alpha_height_log10", "status"]]
